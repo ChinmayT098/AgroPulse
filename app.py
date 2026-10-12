@@ -8,6 +8,8 @@ from spark_processing import run_spark_pipeline, OUTPUT_SUMMARY_PATH
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'agricultural-big-data-secret-key-2026'
+# Set to True by build_static.py when pre-rendering pages for Netlify
+app.jinja_env.globals['static_export'] = False
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', 'agricultural_dataset.csv')
 

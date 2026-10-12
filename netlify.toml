@@ -1,0 +1,8 @@
+# Flask cannot run as a server on Netlify, so the site is pre-rendered to
+# static HTML at build time and predictions run in the browser.
+[build]
+  command = "python build_static.py"
+  publish = "dist"
+
+[build.environment]
+  PYTHON_VERSION = "3.13"
