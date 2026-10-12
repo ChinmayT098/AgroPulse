@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Big Data PySpark Processing - AgroPulse{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+  <div class="page-title-group">
+    <h2>Basic Big Data Processing with PySpark</h2>
+    <p>Demonstrating distributed ETL principles: loading, cleaning, transforming, and aggregating agricultural datasets.</p>
+  </div>
+  <div class="quick-actions">
+    <a href="{{ url_for('spark_view') }}" class="btn btn-primary">
+      <span>🔄</span> Re-execute Spark Pipeline
+    </a>
+  </div>
+</div>
+
+<!-- Execution Engine Badge & Status -->
+<div class="stats-grid" style="margin-bottom: 24px;">
+  <!-- Engine Status -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Active Engine</div>
+      <div class="stat-value" style="font-size: 19px; color: {% if spark_data.is_fallback %}#d97706{% else %}#059669{% endif %};">
+        {% if spark_data.is_fallback %}
+          PySpark Engine (Simulation Mode)
+        {% else %}
+          PySpark Distributed Engine
+        {% endif %}
+      </div>
+      <div class="stat-desc">
+        {% if spark_data.is_fallback %}
+          Java JVM not bound on Windows host &bull; Fallback active
+        {% else %}
+          Running on local Spark Cluster
+        {% endif %}
+      </div>
+    </div>
+    <div class="stat-icon {% if spark_data.is_fallback %}amber{% else %}green{% endif %}">⚡</div>
+  </div>
+
+  <!-- Raw Records Loaded -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Raw Records Ingested</div>
+      <div class="stat-value">{{ "{:,}".format(spark_data.raw_count) }}</div>
+      <div class="stat-desc">Input dataset CSV via Spark DataFrame API</div>
+    </div>
+    <div class="stat-icon blue">📥</div>
+  </div>
+
+  <!-- Cleaned Records Processed -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Valid Processed Records</div>
+      <div class="stat-value" style="color: #059669;">{{ "{:,}".format(spark_data.cleaned_count) }}</div>
+      <div class="stat-desc">Passed range & null filtering transformations</div>
+    </div>
+    <div class="stat-icon green">🧹</div>
+  </div>
+
+  <!-- Execution Time -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Pipeline Duration</div>
+      <div class="stat-value">{{ spark_data.processing_time_sec }} <span style="font-size: 14px; font-weight: normal; color: var(--text-muted);">sec</span></div>
+      <div class="stat-desc">ETL execution & aggregation speed</div>
+    </div>
+    <div class="stat-icon purple">⏱️</div>
+  </div>
+</div>
+
+{% if spark_data.is_fallback %}
+<div style="background-color: #fffbeb; border: 1px solid #fcd34d; color: #92400e; padding: 16px 20px; border-radius: var(--radius-md); margin-bottom: 24px; font-size: 14px;">
+  <strong>📌 Big Data Resilience Notice (Dual-Mode Design):</strong>
+  <p style="margin-top: 4px; font-size: 13px; line-height: 1.5;">
+    On Windows systems without a pre-configured Java Virtual Machine (JDK 8/11/17) and <code>HADOOP_HOME</code> winutils binaries, PySpark's JVM bridge cannot initialize. 
+    Following the project guidelines, the architecture automatically falls back to executing the identical Big Data ETL logic in the web application while keeping the standalone 
+    <code>spark_processing.py</code> script completely compliant for PySpark cluster environments.
+  </p>
+</div>
+{% endif %}
+
+<!-- PySpark Transformations Flowchart / Stages -->
+<div class="chart-card col-12" style="margin-bottom: 24px;">
+  <div class="chart-header">
+    <div class="chart-title-wrapper">
+      <h3>PySpark Big Data ETL Pipeline Stages</h3>
+      <p>Standard architectural pattern for processing agricultural datasets at scale</p>
+    </div>
+    <span class="badge badge-green">Pipeline DAG</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px;">
+      <span class="badge badge-blue">Stage 1</span>
+      <h4 style="font-size: 14px; margin: 8px 0 4px; color: var(--text-main);">Ingestion</h4>
+      <p style="font-size: 12px; color: var(--text-muted);"><code>spark.read.csv()</code> with schema inference across partitions.</p>
+    </div>
+    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px;">
+      <span class="badge badge-amber">Stage 2</span>
+      <h4 style="font-size: 14px; margin: 8px 0 4px; color: var(--text-main);">Data Cleaning</h4>
+      <p style="font-size: 12px; color: var(--text-muted);">Filter outlier boundaries: area &gt; 0, rainfall &gt; 0, yield &gt; 0.</p>
+    </div>
+    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px;">
+      <span class="badge badge-purple">Stage 3</span>
+      <h4 style="font-size: 14px; margin: 8px 0 4px; color: var(--text-main);">Transformation</h4>
+      <p style="font-size: 12px; color: var(--text-muted);"><code>withColumn()</code> mapping productivity tiers and metrics.</p>
+    </div>
+    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px;">
+      <span class="badge badge-green">Stage 4</span>
+      <h4 style="font-size: 14px; margin: 8px 0 4px; color: var(--text-main);">Aggregation & Export</h4>
+      <p style="font-size: 12px; color: var(--text-muted);"><code>groupBy()</code> with multi-column aggregations saved to CSV.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Aggregation Table 1: Crop-level Spark Summary -->
+<div class="chart-card col-12" style="margin-bottom: 24px;">
+  <div class="chart-header">
+    <div class="chart-title-wrapper">
+      <h3>Aggregated Output: Crop-Wise Summary</h3>
+      <p>Generated by <code>df.groupBy('Crop').agg(...)</code></p>
+    </div>
+    <span class="badge badge-blue">Spark Output Summary</span>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Crop</th>
+          <th>Mean Yield (t/ha)</th>
+          <th>Mean Rainfall (mm)</th>
+          <th>Mean Temp (°C)</th>
+          <th>Total Production (Tons)</th>
+          <th>Record Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in spark_data.crop_summary %}
+        <tr>
+          <td><strong>{{ row.Crop }}</strong></td>
+          <td><strong style="color: var(--accent-primary);">{{ row.Avg_Yield_ton_per_ha }}</strong></td>
+          <td>{{ row.Avg_Rainfall_mm }}</td>
+          <td>{{ row.Avg_Temp_C }}</td>
+          <td>{{ "{:,.2f}".format(row.Total_Production_Tons) }}</td>
+          <td>{{ row.Total_Records }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Aggregation Table 2: State-level Spark Summary -->
+<div class="chart-card col-12" style="margin-bottom: 24px;">
+  <div class="chart-header">
+    <div class="chart-title-wrapper">
+      <h3>Aggregated Output: State-Wise Productivity Summary</h3>
+      <p>Generated by <code>df.groupBy('State').agg(...)</code></p>
+    </div>
+    <span class="badge badge-amber">Regional Production</span>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>State / Region</th>
+          <th>Average Yield (t/ha)</th>
+          <th>Total Agricultural Production (Tons)</th>
+          <th>Sample Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in spark_data.state_summary %}
+        <tr>
+          <td><strong>{{ row.State }}</strong></td>
+          <td><strong style="color: var(--accent-primary);">{{ row.Avg_Yield_ton_per_ha }}</strong></td>
+          <td>{{ "{:,.2f}".format(row.Total_Production_Tons) }}</td>
+          <td>{{ row.Total_Records }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

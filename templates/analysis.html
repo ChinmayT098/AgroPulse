@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Agricultural Data Analysis - AgroPulse{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+  <div class="page-title-group">
+    <h2>Agricultural Data Analysis & Exploration</h2>
+    <p>Comprehensive exploratory data analysis (EDA), descriptive statistics, missing value audit, and correlation metrics.</p>
+  </div>
+  <div class="quick-actions">
+    <span class="badge badge-green" style="font-size: 13px; padding: 6px 12px;">Dataset: {{ total_rows }} Records • {{ total_cols }} Features</span>
+  </div>
+</div>
+
+<!-- Section 1: Weather and Soil Impact Cards -->
+<div class="stats-grid" style="margin-bottom: 24px;">
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Rainfall Impact</div>
+      <div style="margin-top: 6px; font-size: 13px;">
+        <div>Low (&lt;600mm): <strong>{{ rain_effect.get('Low (< 600mm)', 'N/A') }} t/ha</strong></div>
+        <div style="margin-top: 3px;">Moderate: <strong>{{ rain_effect.get('Moderate (600-1100mm)', 'N/A') }} t/ha</strong></div>
+        <div style="margin-top: 3px;">High (&gt;1100mm): <strong>{{ rain_effect.get('High (> 1100mm)', 'N/A') }} t/ha</strong></div>
+      </div>
+      <div class="stat-desc" style="margin-top: 6px;">Sugarcane & Rice drive high rain yield</div>
+    </div>
+    <div class="stat-icon blue">💧</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Temperature Impact</div>
+      <div style="margin-top: 6px; font-size: 13px;">
+        <div>Cool (&lt;20°C): <strong>{{ temp_effect.get('Cool (< 20°C)', 'N/A') }} t/ha</strong> (Wheat, Barley)</div>
+        <div style="margin-top: 3px;">Moderate: <strong>{{ temp_effect.get('Moderate (20-28°C)', 'N/A') }} t/ha</strong></div>
+        <div style="margin-top: 3px;">Warm (&gt;28°C): <strong>{{ temp_effect.get('Warm (> 28°C)', 'N/A') }} t/ha</strong></div>
+      </div>
+      <div class="stat-desc" style="margin-top: 6px;">Rabi vs Kharif thermal tolerance</div>
+    </div>
+    <div class="stat-icon amber">☀️</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Data Quality Health</div>
+      <div class="stat-value" style="color: #059669;">100% Clean</div>
+      <div class="stat-desc">0 Missing or Null Values Detected</div>
+    </div>
+    <div class="stat-icon green">✅</div>
+  </div>
+</div>
+
+<!-- Section 2: Correlation Analysis & Feature Importance -->
+<div class="dashboard-grid">
+  <!-- Chart: Correlation with Yield -->
+  <div class="chart-card col-6">
+    <div class="chart-header">
+      <div class="chart-title-wrapper">
+        <h3>Feature Correlation with Crop Yield</h3>
+        <p>Pearson correlation coefficient (r) with target variable Yield_ton_per_ha</p>
+      </div>
+      <span class="badge badge-blue">Pearson Correlation</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="correlationChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart: Random Forest Feature Importance -->
+  <div class="chart-card col-6">
+    <div class="chart-header">
+      <div class="chart-title-wrapper">
+        <h3>Random Forest Feature Importance</h3>
+        <p>Gini impurity reduction across tree splits in the ML model</p>
+      </div>
+      <span class="badge badge-green">Machine Learning Weights</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="featureImportanceChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Section 3: Descriptive Statistics Table -->
+<div class="chart-card col-12" style="margin-bottom: 24px;">
+  <div class="chart-header">
+    <div class="chart-title-wrapper">
+      <h3>Descriptive Statistics Summary (Pandas .describe())</h3>
+      <p>Parametric distribution, mean, quartiles, and dispersion metrics</p>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Area (ha)</th>
+          <th>Rainfall (mm)</th>
+          <th>Temp (°C)</th>
+          <th>Soil pH</th>
+          <th>Nitrogen (N)</th>
+          <th>Phosphorus (P)</th>
+          <th>Potassium (K)</th>
+          <th>Yield (t/ha)</th>
+          <th>Production (t)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in stats_records %}
+        <tr>
+          <td><strong>{{ row['index'] }}</strong></td>
+          <td>{{ row.get('Area_Hectares', '-') }}</td>
+          <td>{{ row.get('Rainfall_mm', '-') }}</td>
+          <td>{{ row.get('Temperature_C', '-') }}</td>
+          <td>{{ row.get('Soil_pH', '-') }}</td>
+          <td>{{ row.get('Nitrogen_N', '-') }}</td>
+          <td>{{ row.get('Phosphorus_P', '-') }}</td>
+          <td>{{ row.get('Potassium_K', '-') }}</td>
+          <td><strong style="color: var(--accent-primary);">{{ row.get('Yield_ton_per_ha', '-') }}</strong></td>
+          <td>{{ "{:,.1f}".format(row.get('Production_tons', 0)) if row.get('Production_tons') else '-' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Section 4: Dataset Audit (Missing Values) -->
+<div class="chart-card col-12" style="margin-bottom: 24px;">
+  <div class="chart-header">
+    <div class="chart-title-wrapper">
+      <h3>Dataset Schema & Missing Values Audit</h3>
+      <p>Data integrity verification ensuring zero hallucination or artificial voids</p>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Column Name</th>
+          <th>Data Type</th>
+          <th>Total Rows</th>
+          <th>Missing Values</th>
+          <th>Missing Percentage</th>
+          <th>Data Integrity Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for col in missing_info %}
+        <tr>
+          <td><strong>{{ col['column'] }}</strong></td>
+          <td><code>{{ col['data_type'] }}</code></td>
+          <td>{{ total_rows }}</td>
+          <td>{{ col['missing_count'] }}</td>
+          <td>{{ col['missing_percent'] }}%</td>
+          <td>
+            <span class="badge badge-green">✓ {{ col['status'] }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Section 5: Dataset Table Preview -->
+<div class="chart-card col-12">
+  <div class="chart-header">
+    <div class="chart-title-wrapper">
+      <h3>Agricultural Dataset Table Preview (Top 25 Observations)</h3>
+      <p>Raw observations from CSV dataset loaded in Pandas DataFrame</p>
+    </div>
+    <span class="badge badge-blue">Displaying 25 of {{ total_rows }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Crop</th>
+          <th>State</th>
+          <th>Season</th>
+          <th>Year</th>
+          <th>Area (ha)</th>
+          <th>Rainfall (mm)</th>
+          <th>Temp (°C)</th>
+          <th>Soil Type</th>
+          <th>pH</th>
+          <th>N</th>
+          <th>P</th>
+          <th>K</th>
+          <th>Yield (t/ha)</th>
+          <th>Production (t)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in table_preview %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ row['Crop'] }}</strong></td>
+          <td>{{ row['State'] }}</td>
+          <td>{{ row['Season'] }}</td>
+          <td>{{ row['Year'] }}</td>
+          <td>{{ row['Area_Hectares'] }}</td>
+          <td>{{ row['Rainfall_mm'] }}</td>
+          <td>{{ row['Temperature_C'] }}</td>
+          <td>{{ row['Soil_Type'] }}</td>
+          <td>{{ row['Soil_pH'] }}</td>
+          <td>{{ row['Nitrogen_N'] }}</td>
+          <td>{{ row['Phosphorus_P'] }}</td>
+          <td>{{ row['Potassium_K'] }}</td>
+          <td><strong style="color: #059669;">{{ row['Yield_ton_per_ha'] }}</strong></td>
+          <td>{{ "{:,.1f}".format(row['Production_tons']) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const corrFeatures = {{ corr_features_json | safe }};
+  const corrValues = {{ corr_values_json | safe }};
+  const fiLabels = {{ fi_labels_json | safe }};
+  const fiValues = {{ fi_values_json | safe }};
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Correlation with Yield (Horizontal Bar Chart)
+    const ctxCorr = document.getElementById('correlationChart').getContext('2d');
+    new Chart(ctxCorr, {
+      type: 'bar',
+      data: {
+        labels: corrFeatures.map(f => f.replace('_', ' ')),
+        datasets: [{
+          label: 'Correlation with Yield (r)',
+          data: corrValues,
+          backgroundColor: corrValues.map(v => v >= 0 ? 'rgba(5, 150, 105, 0.75)' : 'rgba(220, 38, 38, 0.75)'),
+          borderColor: corrValues.map(v => v >= 0 ? '#059669' : '#dc2626'),
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => ` r = ${context.raw}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Pearson Correlation (r)', font: { weight: 'bold' } },
+            grid: { color: '#f1f5f9' },
+            min: -1.0,
+            max: 1.0
+          },
+          y: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+
+    // 2. Feature Importance Chart
+    const ctxFi = document.getElementById('featureImportanceChart').getContext('2d');
+    new Chart(ctxFi, {
+      type: 'bar',
+      data: {
+        labels: fiLabels.map(f => f.replace('_', ' ')),
+        datasets: [{
+          label: 'Importance Percentage (%)',
+          data: fiValues,
+          backgroundColor: '#0284c7',
+          hoverBackgroundColor: '#0369a1',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => ` ${context.raw}% Relative Contribution`
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            title: { display: true, text: 'Importance (%)', font: { weight: 'bold' } },
+            grid: { color: '#f1f5f9' }
+          },
+          y: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

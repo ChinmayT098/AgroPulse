@@ -1,0 +1,19 @@
+{
+  "name": "agricultural-data-analysis-and-yield-prediction",
+  "version": "1.0.0",
+  "description": "Agricultural Data Analysis and Crop Yield Prediction (Big Data Mini Project)",
+  "scripts": {
+    "dev": "python app.py",
+    "start": "python app.py",
+    "spark": "python spark_processing.py"
+  },
+  "keywords": [
+    "flask",
+    "pyspark",
+    "machine-learning",
+    "agriculture",
+    "crop-yield-prediction"
+  ],
+  "author": "",
+  "license": "ISC"
+}

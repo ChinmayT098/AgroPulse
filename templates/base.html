@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AgroPulse - Agricultural Big Data Analysis & Crop Yield Prediction{% endblock %}</title>
+  <meta name="description" content="Agricultural Data Analysis and Crop Yield Prediction using Flask, Machine Learning, and Big Data Processing.">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Site Navigation Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="{{ url_for('dashboard') }}" class="brand-wrapper">
+        <div class="brand-icon">🌱</div>
+        <div class="brand-text">
+          <h1>AgroPulse</h1>
+          <p>Agricultural Big Data & Analytics</p>
+        </div>
+      </a>
+
+      <nav class="main-nav">
+        <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="{{ url_for('analysis') }}" class="nav-link {% if request.endpoint == 'analysis' %}active{% endif %}">
+          <span>📈</span> Data Analysis
+        </a>
+        <a href="{{ url_for('predict') }}" class="nav-link {% if request.endpoint == 'predict' %}active{% endif %}">
+          <span>🌾</span> Yield Prediction
+        </a>
+        <a href="{{ url_for('spark_view') }}" class="nav-link {% if request.endpoint == 'spark_view' %}active{% endif %}">
+          <span>⚡</span> Big Data (PySpark)
+        </a>
+      </nav>
+
+      <div class="project-badge">
+        <span>🎓</span> Big Data Mini Project
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div>
+        <strong>Agricultural Data Analysis & Crop Yield Prediction</strong>
+        <p style="font-size: 12px; margin-top: 3px;">Big Data Mini Project • Python Flask • Random Forest ML • PySpark Engine • Chart.js</p>
+      </div>
+      <div>
+        <span class="badge badge-green">Status: Production Ready</span>
+        <span class="badge badge-blue">Dataset: 1,200 Agricultural Records</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Core JavaScript -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

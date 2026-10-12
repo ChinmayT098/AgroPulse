@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AgroPulse Agricultural Analytics{% endblock %}
+
+{% block content %}
+<!-- Page Title -->
+<div class="page-intro">
+  <div class="page-title-group">
+    <h2>Agricultural Productivity Dashboard</h2>
+    <p>Live macro statistics, crop-wise yield comparisons, rainfall correlation, and historical productivity patterns.</p>
+  </div>
+  <div class="quick-actions">
+    <a href="{{ url_for('predict') }}" class="btn btn-primary">
+      <span>🌾</span> Predict Crop Yield
+    </a>
+    <a href="{{ url_for('analysis') }}" class="btn btn-secondary">
+      <span>🔍</span> Detailed Analysis
+    </a>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="stats-grid">
+  <!-- Card 1: Total Records -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Total Records</div>
+      <div class="stat-value">{{ "{:,}".format(total_records) }}</div>
+      <div class="stat-desc">Historical agricultural observations</div>
+    </div>
+    <div class="stat-icon green">📁</div>
+  </div>
+
+  <!-- Card 2: Crop Types -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Crop Varieties</div>
+      <div class="stat-value">{{ num_crops }}</div>
+      <div class="stat-desc">Cereals, cash crops, pulses & oilseeds</div>
+    </div>
+    <div class="stat-icon amber">🌾</div>
+  </div>
+
+  <!-- Card 3: Average Yield -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Average Crop Yield</div>
+      <div class="stat-value">{{ avg_yield }} <span style="font-size: 14px; font-weight: normal; color: var(--text-muted);">t/ha</span></div>
+      <div class="stat-desc">Calculated across loaded dataset</div>
+    </div>
+    <div class="stat-icon green">⚖️</div>
+  </div>
+
+  <!-- Card 4: Average Rainfall -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Average Rainfall</div>
+      <div class="stat-value">{{ avg_rainfall }} <span style="font-size: 14px; font-weight: normal; color: var(--text-muted);">mm</span></div>
+      <div class="stat-desc">Mean precipitation level</div>
+    </div>
+    <div class="stat-icon blue">🌧️</div>
+  </div>
+
+  <!-- Card 5: ML Accuracy -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-label">Model Accuracy (R²)</div>
+      <div class="stat-value">{{ "%.1f"|format(r2_score * 100) }}%</div>
+      <div class="stat-desc">Random Forest Regressor fit</div>
+    </div>
+    <div class="stat-icon purple">🎯</div>
+  </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="dashboard-grid">
+  <!-- Chart 1: Crop-wise Yield Comparison -->
+  <div class="chart-card col-8">
+    <div class="chart-header">
+      <div class="chart-title-wrapper">
+        <h3>Crop-wise Average Yield Comparison</h3>
+        <p>Mean productivity in metric tons per hectare across evaluated crops</p>
+      </div>
+      <span class="badge badge-green">Tons / Hectare</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="cropYieldChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 2: Soil Distribution -->
+  <div class="chart-card col-4">
+    <div class="chart-header">
+      <div class="chart-title-wrapper">
+        <h3>Soil Type Distribution</h3>
+        <p>Prevalence across cultivation areas</p>
+      </div>
+    </div>
+    <div class="chart-container">
+      <canvas id="soilDistChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 3: Rainfall vs Yield Scatter -->
+  <div class="chart-card col-6">
+    <div class="chart-header">
+      <div class="chart-title-wrapper">
+        <h3>Rainfall vs. Crop Yield</h3>
+        <p>Relationship between precipitation level (mm) and yield (t/ha)</p>
+      </div>
+      <span class="badge badge-blue">Precipitation Effect</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="rainfallScatterChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 4: Historical Productivity Trend -->
+  <div class="chart-card col-6">
+    <div class="chart-header">
+      <div class="chart-title-wrapper">
+        <h3>Historical Productivity Trend (2014 - 2024)</h3>
+        <p>Ten-year agricultural yield trajectory and technology adoption</p>
+      </div>
+      <span class="badge badge-amber">10-Year Trend</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="historicalTrendChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Summary Insights Banner -->
+<div class="chart-card col-12" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
+  <div class="chart-header">
+    <div class="chart-title-wrapper">
+      <h3>💡 Key Agronomic Insights Discovered from the Dataset</h3>
+      <p>Findings derived from the loaded observations</p>
+    </div>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 6px;">
+    <div style="background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px;">
+      <strong style="color: var(--accent-primary);">1. Moisture-Driven Crops</strong>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">High-biomass crops such as Sugarcane and Rice require precipitation between 900–1800mm, with yield declining sharply when drought stress occurs.</p>
+    </div>
+    <div style="background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px;">
+      <strong style="color: var(--secondary);">2. Soil pH Sweet Spot</strong>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Optimal nutrient absorption occurs in neutral to slightly alkaline soils (pH 6.2 - 7.5). Extreme acidic or alkaline conditions impede nutrient uptake.</p>
+    </div>
+    <div style="background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px;">
+      <strong style="color: var(--amber);">3. Soil Nitrogen & Fertilizer Impact</strong>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Nitrogen levels show a strong positive correlation with cereal yields (Wheat, Maize, Rice), confirming the critical role of balanced fertilization.</p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Injected dataset variables from Flask backend
+  const cropNames = {{ crop_names_json | safe }};
+  const cropYields = {{ crop_yields_json | safe }};
+  const rainfallScatterData = {{ rainfall_scatter_json | safe }};
+  const trendYears = {{ trend_years_json | safe }};
+  const trendYields = {{ trend_yields_json | safe }};
+  const soilLabels = {{ soil_labels_json | safe }};
+  const soilCounts = {{ soil_counts_json | safe }};
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Crop-wise Yield Comparison (Bar Chart)
+    const ctxCrop = document.getElementById('cropYieldChart').getContext('2d');
+    new Chart(ctxCrop, {
+      type: 'bar',
+      data: {
+        labels: cropNames,
+        datasets: [{
+          label: 'Average Yield (t/ha)',
+          data: cropYields,
+          backgroundColor: '#10b981',
+          hoverBackgroundColor: '#059669',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => ` ${context.raw} Tons / Hectare`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Tons / Hectare', font: { weight: 'bold' } },
+            grid: { color: '#f1f5f9' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+
+    // 2. Soil Type Distribution (Doughnut Chart)
+    const ctxSoil = document.getElementById('soilDistChart').getContext('2d');
+    new Chart(ctxSoil, {
+      type: 'doughnut',
+      data: {
+        labels: soilLabels,
+        datasets: [{
+          data: soilCounts,
+          backgroundColor: ['#10b981', '#0284c7', '#d97706', '#8b5cf6', '#ec4899', '#64748b'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+        },
+        cutout: '65%'
+      }
+    });
+
+    // 3. Rainfall vs Yield (Scatter Plot)
+    const ctxRain = document.getElementById('rainfallScatterChart').getContext('2d');
+    new Chart(ctxRain, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Observations',
+          data: rainfallScatterData.map(d => ({ x: d.x, y: d.y })),
+          backgroundColor: 'rgba(2, 132, 199, 0.6)',
+          borderColor: '#0284c7',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const pt = rainfallScatterData[context.dataIndex];
+                return `${pt.crop || 'Crop'}: Rain ${pt.x}mm, Yield ${pt.y} t/ha`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Rainfall (mm)', font: { weight: 'bold' } },
+            grid: { color: '#f1f5f9' }
+          },
+          y: {
+            title: { display: true, text: 'Yield (t/ha)', font: { weight: 'bold' } },
+            grid: { color: '#f1f5f9' }
+          }
+        }
+      }
+    });
+
+    // 4. Historical Productivity Trend (Line Chart)
+    const ctxTrend = document.getElementById('historicalTrendChart').getContext('2d');
+    new Chart(ctxTrend, {
+      type: 'line',
+      data: {
+        labels: trendYears,
+        datasets: [{
+          label: 'Mean Yield',
+          data: trendYields,
+          borderColor: '#059669',
+          backgroundColor: 'rgba(5, 150, 105, 0.1)',
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#059669',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => ` ${context.raw} Tons / Hectare`
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Year', font: { weight: 'bold' } },
+            grid: { display: false }
+          },
+          y: {
+            title: { display: true, text: 'Mean Yield (t/ha)', font: { weight: 'bold' } },
+            grid: { color: '#f1f5f9' }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}
