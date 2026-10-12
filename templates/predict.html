@@ -99,6 +99,10 @@
 <div style="margin-bottom: 24px;"></div>
 {% endif %}
 
+<!-- Client-side prediction output (static Netlify build) -->
+<div id="clientPredictionError" style="display: none; background-color: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 20px; font-size: 14px;"></div>
+<div id="clientPrediction"></div>
+
 <!-- Prediction Form -->
 <div class="form-card">
   <div class="chart-header" style="margin-bottom: 22px;">
@@ -109,7 +113,7 @@
     <span class="badge badge-green">Genuine Model Inference</span>
   </div>
 
-  <form method="POST" action="{{ url_for('predict') }}" id="predictForm">
+  <form method="POST" action="{{ url_for('predict') }}" id="predictForm"{% if static_export %} data-static-model="{{ url_for('static', filename='model/forest.json') }}"{% endif %}>
     <div class="form-grid">
       <!-- 1. Crop Selection -->
       <div class="form-group">
@@ -218,6 +222,9 @@
 {% endblock %}
 
 {% block scripts %}
+{% if static_export %}
+<script src="{{ url_for('static', filename='js/predict.js') }}"></script>
+{% endif %}
 <script>
   // Quick presets to easily demo in viva presentation
   const presets = {
