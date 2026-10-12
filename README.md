@@ -119,18 +119,3 @@ python spark_processing.py
 
 ---
 
-## 6. Viva & Examination Q&A Guide
-
-**Q1: Why did you choose Random Forest Regressor for Crop Yield Prediction?**
-> *Answer:* Random Forest is an ensemble learning method combining multiple decision trees. Agricultural productivity involves complex, non-linear interactions (e.g., rainfall helps up to an optimum, but excessive water causes waterlogging). Random Forest handles non-linearities, resists overfitting, requires minimal feature scaling, and provides direct feature importance scores.
-
-**Q2: What is the significance of the $R^2$ Score and MAE?**
-> *Answer:* 
-> - **$R^2$ (Coefficient of Determination):** Measures the proportion of variance in crop yield explained by the input features. An $R^2$ of ~0.99 indicates the model captures 99% of variance.
-> - **MAE (Mean Absolute Error):** Measures the average magnitude of prediction errors in the original units (Tons/Hectare). An MAE of 0.54 means our predictions deviate by only ~0.54 tons/ha on average.
-
-**Q3: How is Big Data PySpark relevant here?**
-> *Answer:* Real agricultural datasets from satellite observations, IoT soil sensors, and government mandi surveys span millions of records across multiple seasons and regions. PySpark uses distributed in-memory computing (RDDs and DataFrames) to execute cleaning, filtering, and aggregations across cluster nodes in parallel.
-
-**Q4: How does the system handle missing or out-of-range inputs?**
-> *Answer:* The backend enforces strict numerical casting, non-negative range constraints, and Scikit-Learn `ColumnTransformer` handles unknown categorical values via `handle_unknown='ignore'`.
